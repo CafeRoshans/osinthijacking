@@ -31,6 +31,7 @@
             border-color: #dfdfdf #808080 #808080 #dfdfdf;
             min-width: 300px;
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 100;
         }
 
         .title-bar {
@@ -42,6 +43,7 @@
             justify-content: space-between;
             align-items: center;
             height: 18px;
+            cursor: move;
         }
 
         .title-bar-controls {
@@ -64,6 +66,8 @@
         .window-content {
             padding: 8px;
             background: #c0c0c0;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .menu-bar {
@@ -76,6 +80,7 @@
         .menu-item {
             margin-right: 15px;
             cursor: pointer;
+            padding: 2px 8px;
         }
 
         .menu-item:hover {
@@ -94,6 +99,7 @@
             display: flex;
             align-items: center;
             padding: 0 4px;
+            z-index: 1000;
         }
 
         .start-button {
@@ -110,23 +116,37 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 64px;
-            margin: 10px;
+            width: 80px;
+            margin: 8px;
             cursor: pointer;
             text-align: center;
+            padding: 4px;
+        }
+
+        .icon:hover {
+            background: rgba(0, 0, 128, 0.2);
         }
 
         .icon-image {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 4px;
+            width: 48px;
+            height: 48px;
+            margin-bottom: 6px;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .desktop-icons {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
+            display: grid;
+            grid-template-rows: repeat(auto-fill, 80px);
+            grid-auto-flow: column;
+            gap: 8px;
+            align-content: start;
+            justify-content: start;
             height: 100%;
+            padding: 10px;
+            grid-auto-columns: min-content;
         }
 
         .dialog-box {
@@ -176,6 +196,52 @@
             border: 2px solid #0f0;
             margin: 10px 0;
         }
+
+        .paint-canvas {
+            background: white;
+            border: 2px solid;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            cursor: crosshair;
+        }
+
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 69px);
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        .calc-display {
+            grid-column: 1 / span 4;
+            background: white;
+            border: 2px solid;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            padding: 4px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .media-player {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000080;
+            width: 0%;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +258,26 @@
             <div class="icon" onclick="openWindow('secretFiles')">
                 <div class="icon-image">📁</div>
                 <span>Секретные файлы</span>
+            </div>
+            <div class="icon" onclick="openWindow('paint')">
+                <div class="icon-image">🎨</div>
+                <span>Paint</span>
+            </div>
+            <div class="icon" onclick="openWindow('calculator')">
+                <div class="icon-image">🧮</div>
+                <span>Калькулятор</span>
+            </div>
+            <div class="icon" onclick="openWindow('mediaPlayer')">
+                <div class="icon-image">📻</div>
+                <span>Медиаплеер</span>
+            </div>
+            <div class="icon" onclick="openWindow('systemInfo')">
+                <div class="icon-image">⚙️</div>
+                <span>Система</span>
+            </div>
+            <div class="icon" onclick="openWindow('internetExplorer')">
+                <div class="icon-image">🌐</div>
+                <span>Internet Explorer</span>
             </div>
         </div>
 
@@ -238,7 +324,7 @@
                 </div>
                 <button onclick="runScan()">Запустить сканирование</button>
                 <div id="scanResult" style="margin-top: 10px; display: none;">
-                    <textarea rows="8" cols="63" readonly>
+                    <textarea rows="16" cols="63" readonly>
 [SCAN COMPLETE]
 Найдено: Червь Морриса
 Рекомендация: продолжить
@@ -462,6 +548,166 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
                 </div>
             </div>
         </div>
+
+        <!-- Окно Paint -->
+        <div id="paint" class="window" style="left: 50px; top: 50px; width: 420px; display: none;">
+            <div class="title-bar">
+                <span>Paint - [Безымянный]</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('paint')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Файл</div>
+                <div class="menu-item">Правка</div>
+                <div class="menu-item">Вид</div>
+                <div class="menu-item">Палитра</div>
+                <div class="menu-item">Справка</div>
+            </div>
+            <div class="window-content">
+                <canvas id="paintCanvas" width="400" height="300" class="paint-canvas"></canvas>
+                <div style="margin-top: 10px;">
+                    <button onclick="clearCanvas()">Очистить</button>
+                    <button onclick="changeColor('#000000')">Черный</button>
+                    <button onclick="changeColor('#ff0000')">Красный</button>
+                    <button onclick="changeColor('#0000ff')">Синий</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Калькулятор -->
+        <div id="calculator" class="window" style="left: 300px; top: 100px; width: 220px; display: none;">
+            <div class="title-bar">
+                <span>Калькулятор</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('calculator')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Правка</div>
+                <div class="menu-item">Вид</div>
+                <div class="menu-item">Справка</div>
+            </div>
+            <div class="window-content">
+                <div class="calculator">
+                    <div class="calc-display" id="calcDisplay">0</div>
+                    <button onclick="clearCalc()">C</button>
+                    <button onclick="appendToCalc('/')">/</button>
+                    <button onclick="appendToCalc('*')">*</button>
+                    <button onclick="appendToCalc('-')">-</button>
+                    <button onclick="appendToCalc('7')">7</button>
+                    <button onclick="appendToCalc('8')">8</button>
+                    <button onclick="appendToCalc('9')">9</button>
+                    <button onclick="appendToCalc('+')" style="grid-row: span 2">+</button>
+                    <button onclick="appendToCalc('4')">4</button>
+                    <button onclick="appendToCalc('5')">5</button>
+                    <button onclick="appendToCalc('6')">6</button>
+                    <button onclick="appendToCalc('1')">1</button>
+                    <button onclick="appendToCalc('2')">2</button>
+                    <button onclick="appendToCalc('3')">3</button>
+                    <button onclick="calculate()" style="grid-row: span 2">=</button>
+                    <button onclick="appendToCalc('0')" style="grid-column: span 2">0</button>
+                    <button onclick="appendToCalc('.')">.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Медиаплеер -->
+        <div id="mediaPlayer" class="window" style="left: 200px; top: 50px; width: 350px; display: none;">
+            <div class="title-bar">
+                <span>Медиаплеер - [Нет трека]</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('mediaPlayer')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Файл</div>
+                <div class="menu-item">Воспроизведение</div>
+                <div class="menu-item">Справка</div>
+            </div>
+            <div class="window-content">
+                <div class="media-player">
+                    <div>🎵 Проигрыватель Windows 95</div>
+                    <div style="font-size: 24px; margin: 20px 0;">▶️</div>
+                    <div>Трек: OSINT_Theme_1995.mp3</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="musicProgress"></div>
+                    </div>
+                    <div>
+                        <button onclick="playMusic()">▶ Воспроизвести</button>
+                        <button onclick="pauseMusic()">⏸ Пауза</button>
+                        <button onclick="stopMusic()">⏹ Стоп</button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 10px;">
+                        <em>Звук: отключен (как в старые добрые)</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Система -->
+        <div id="systemInfo" class="window" style="left: 100px; top: 200px; width: 400px; display: none;">
+            <div class="title-bar">
+                <span>Свойства системы</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('systemInfo')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Общие</div>
+                <div class="menu-item">Устройства</div>
+                <div class="menu-item">Профили</div>
+                <div class="menu-item">Производительность</div>
+            </div>
+            <div class="window-content">
+                <p><strong>Microsoft Windows 95</strong></p>
+                <p>Версия 4.00.950</p>
+                <p>Зарегистрировано на: OSINT Investigator</p>
+                <p>Компьютер: Pentium 20000MHz</p>
+                <p>Память: 256MB RAM</p>
+                <div class="dialog-box">
+                    <p>⚡ <strong>Производительность</strong></p>
+                    <p>Состояние системы: ОПТИМАЛЬНОЕ</p>
+                    <p>Файл подкачки: 69MB использовано</p>
+                    <p>Процессор: 100% загружено</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Internet Explorer -->
+        <div id="internetExplorer" class="window" style="left: 50px; top: 100px; width: 600px; display: none;">
+            <div class="title-bar">
+                <span>Internet Explorer</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('internetExplorer')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Файл</div>
+                <div class="menu-item">Правка</div>
+                <div class="menu-item">Вид</div>
+                <div class="menu-item">Избранное</div>
+                <div class="menu-item">Справка</div>
+            </div>
+            <div class="window-content">
+                <div style="display: flex; margin-bottom: 10px;">
+                    <button>Назад</button>
+                    <button>Вперед</button>
+                    <button>Стоп</button>
+                    <button>Обновить</button>
+                    <input type="text" value="http://www.osint-itmo.xyz/" style="flex: 1; margin: 0 5px;">
+                    <button>Переход</button>
+                </div>
+                <div style="border: 2px solid; border-color: #808080 #dfdfdf #dfdfdf #808080; height: 200px; padding: 10px; background: white;">
+                    <p><strong>Добро пожаловать в Internet Explorer!</strong></p>
+                    <p>Загрузка страницы OSINT ITMO...</p>
+                    <p style="color: blue; text-decoration: underline; cursor: pointer;">• Расписание занятий</p>
+                    <p style="color: blue; text-decoration: underline; cursor: pointer;">• Методические материалы</p>
+                    <p style="color: blue; text-decoration: underline; cursor: pointer;">• Червь Морриса FAQ</p>
+                    <p><em>Загружено: 100% (вирусами)</em></p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="taskbar">
@@ -477,12 +723,24 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
         // Ожидаемый хэш для пароля
         const EXPECTED_HASH = 'bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363';
 
+        // Функции для окон
         function openWindow(windowId) {
             document.getElementById(windowId).style.display = 'block';
+            bringToFront(windowId);
         }
 
         function closeWindow(windowId) {
             document.getElementById(windowId).style.display = 'none';
+        }
+
+        function bringToFront(windowId) {
+            const windows = document.querySelectorAll('.window');
+            let maxZIndex = 100;
+            windows.forEach(win => {
+                const zIndex = parseInt(win.style.zIndex) || 100;
+                if (zIndex > maxZIndex) maxZIndex = zIndex;
+            });
+            document.getElementById(windowId).style.zIndex = maxZIndex + 1;
         }
 
         function runScan() {
@@ -490,14 +748,13 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             result.style.display = 'block';
         }
 
-        // Обновление хэша в реальном времени с использованием библиотеки
+        // Хеширование
         function updateHash() {
             const password = document.getElementById('password').value;
             const currentHashElement = document.getElementById('currentHash');
             const hashStatusElement = document.getElementById('hashStatus');
 
             if (password.length > 0) {
-                // Используем библиотеку js-sha256
                 const hash = sha256(password);
                 currentHashElement.textContent = hash;
 
@@ -515,7 +772,6 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             }
         }
 
-        // Проверка пароля по хэшу
         function checkPasswordHash() {
             const password = document.getElementById('password').value;
             const hash = sha256(password);
@@ -524,8 +780,88 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             if (hash === EXPECTED_HASH) {
                 secret.style.display = 'block';
             } else {
-                alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Посмотрите в отчет.');
+                alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Попробуйте посмотреть в отчет.');
             }
+        }
+
+        // Paint
+        let isDrawing = false;
+        let currentColor = '#000000';
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.fillStyle = currentColor;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ctx.fillRect(x, y, 3, 3);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function changeColor(color) {
+            currentColor = color;
+        }
+
+        // Калькулятор
+        let calcValue = '0';
+        function appendToCalc(char) {
+            if (calcValue === '0') calcValue = '';
+            calcValue += char;
+            document.getElementById('calcDisplay').textContent = calcValue;
+        }
+
+        function clearCalc() {
+            calcValue = '0';
+            document.getElementById('calcDisplay').textContent = calcValue;
+        }
+
+        function calculate() {
+            try {
+                calcValue = eval(calcValue).toString();
+                document.getElementById('calcDisplay').textContent = calcValue;
+            } catch {
+                document.getElementById('calcDisplay').textContent = 'Error';
+                calcValue = '0';
+            }
+        }
+
+        // Медиаплеер
+        let progress = 0;
+        function playMusic() {
+            progress = 0;
+            const interval = setInterval(() => {
+                progress += 2;
+                document.getElementById('musicProgress').style.width = progress + '%';
+                if (progress >= 100) clearInterval(interval);
+            }, 100);
+        }
+
+        function pauseMusic() {
+            alert('⏸ Пауза! Музыка остановлена (но ее и так не было)');
+        }
+
+        function stopMusic() {
+            document.getElementById('musicProgress').style.width = '0%';
         }
 
         function toggleStartMenu() {
@@ -542,6 +878,7 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
         document.addEventListener('DOMContentLoaded', function() {
             updateClock();
             setInterval(updateClock, 1000);
+            clearCanvas(); // Очистить canvas при загрузке
         });
 
         // Случайное изменение места на диске, а что вы хотели?, я раньше считал, что это и вправду случайное число
@@ -549,9 +886,6 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             const freeSpace = Math.floor(Math.random() * 100) + 1;
             document.getElementById('diskSpace').textContent = freeSpace + '% свободно';
         }, 500);
-
-        // Проверка что библиотека загружена
-        console.log('SHA256 library loaded:', typeof sha256 !== 'undefined');
     </script>
 </body>
 </html>
