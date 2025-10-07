@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSINT Investigator 95</title>
+    <!-- Подключаем библиотеку SHA-256 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -472,22 +474,6 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
     </div>
 
     <script>
-        // Простая JavaScript реализация SHA-256
-        async function sha256(message) {
-            // Преобразуем строку в байты
-            const msgBuffer = new TextEncoder().encode(message);
-
-            // Хешируем сообщение
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-
-            // Преобразуем ArrayBuffer в массив байт
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-            // Преобразуем байты в hex строку
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
         // Ожидаемый хэш для пароля
         const EXPECTED_HASH = 'bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363';
 
@@ -504,52 +490,41 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             result.style.display = 'block';
         }
 
-        // Обновление хэша в реальном времени
-        async function updateHash() {
+        // Обновление хэша в реальном времени с использованием библиотеки
+        function updateHash() {
             const password = document.getElementById('password').value;
             const currentHashElement = document.getElementById('currentHash');
             const hashStatusElement = document.getElementById('hashStatus');
 
-            try {
-                if (password.length > 0) {
-                    const hash = await sha256(password);
-                    currentHashElement.textContent = hash;
+            if (password.length > 0) {
+                // Используем библиотеку js-sha256
+                const hash = sha256(password);
+                currentHashElement.textContent = hash;
 
-                    if (hash === EXPECTED_HASH) {
-                        hashStatusElement.innerHTML = '✅ СОВПАДЕНИЕ!';
-                        hashStatusElement.style.color = 'green';
-                    } else {
-                        hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
-                        hashStatusElement.style.color = 'red';
-                    }
+                if (hash === EXPECTED_HASH) {
+                    hashStatusElement.innerHTML = '✅ СОВПАДЕНИЕ!';
+                    hashStatusElement.style.color = 'green';
                 } else {
-                    currentHashElement.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
                     hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
                     hashStatusElement.style.color = 'red';
                 }
-            } catch (error) {
-                console.error('Ошибка хеширования:', error);
-                currentHashElement.textContent = 'ОШИБКА ВЫЧИСЛЕНИЯ';
-                hashStatusElement.innerHTML = '❌ ОШИБКА';
+            } else {
+                currentHashElement.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
+                hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
                 hashStatusElement.style.color = 'red';
             }
         }
 
         // Проверка пароля по хэшу
-        async function checkPasswordHash() {
+        function checkPasswordHash() {
             const password = document.getElementById('password').value;
+            const hash = sha256(password);
             const secret = document.getElementById('secretContent');
 
-            try {
-                const hash = await sha256(password);
-
-                if (hash === EXPECTED_HASH) {
-                    secret.style.display = 'block';
-                } else {
-                    alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Попробуйте другое слово.');
-                }
-            } catch (error) {
-                alert('Ошибка при проверке пароля. Попробуйте еще раз.');
+            if (hash === EXPECTED_HASH) {
+                secret.style.display = 'block';
+            } else {
+                alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Посмотрите в отчет.');
             }
         }
 
@@ -569,18 +544,14 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             setInterval(updateClock, 1000);
         });
 
-        // Случайное изменение места на диске, а что вы хотели, я раньше считал, что это и вправду случайное число
+        // Случайное изменение места на диске, а что вы хотели?, я раньше считал, что это и вправду случайное число
         setInterval(() => {
             const freeSpace = Math.floor(Math.random() * 100) + 1;
             document.getElementById('diskSpace').textContent = freeSpace + '% свободно';
-        }, 5000);
+        }, 500);
 
-        // Резервная функция на случай проблем с crypto.subtle
-        function fallbackSHA256(str) {
-            // Простая заглушка для демонстрации
-            // В реальном приложении здесь должна быть полноценная JS реализация SHA-256
-            return 'bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363';
-        }
+        // Проверка что библиотека загружена
+        console.log('SHA256 library loaded:', typeof sha256 !== 'undefined');
     </script>
 </body>
 </html>
