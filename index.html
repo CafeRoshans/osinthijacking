@@ -472,12 +472,20 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
     </div>
 
     <script>
-        // Функция для вычисления SHA-256 хэша
+        // Простая JavaScript реализация SHA-256
         async function sha256(message) {
+            // Преобразуем строку в байты
             const msgBuffer = new TextEncoder().encode(message);
+
+            // Хешируем сообщение
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+            // Преобразуем ArrayBuffer в массив байт
             const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // Преобразуем байты в hex строку
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
         }
 
         // Ожидаемый хэш для пароля
@@ -502,20 +510,27 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             const currentHashElement = document.getElementById('currentHash');
             const hashStatusElement = document.getElementById('hashStatus');
 
-            if (password.length > 0) {
-                const hash = await sha256(password);
-                currentHashElement.textContent = hash;
+            try {
+                if (password.length > 0) {
+                    const hash = await sha256(password);
+                    currentHashElement.textContent = hash;
 
-                if (hash === EXPECTED_HASH) {
-                    hashStatusElement.innerHTML = '✅ СОВПАДЕНИЕ!';
-                    hashStatusElement.style.color = 'green';
+                    if (hash === EXPECTED_HASH) {
+                        hashStatusElement.innerHTML = '✅ СОВПАДЕНИЕ!';
+                        hashStatusElement.style.color = 'green';
+                    } else {
+                        hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
+                        hashStatusElement.style.color = 'red';
+                    }
                 } else {
+                    currentHashElement.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
                     hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
                     hashStatusElement.style.color = 'red';
                 }
-            } else {
-                currentHashElement.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
-                hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
+            } catch (error) {
+                console.error('Ошибка хеширования:', error);
+                currentHashElement.textContent = 'ОШИБКА ВЫЧИСЛЕНИЯ';
+                hashStatusElement.innerHTML = '❌ ОШИБКА';
                 hashStatusElement.style.color = 'red';
             }
         }
@@ -523,13 +538,18 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
         // Проверка пароля по хэшу
         async function checkPasswordHash() {
             const password = document.getElementById('password').value;
-            const hash = await sha256(password);
             const secret = document.getElementById('secretContent');
 
-            if (hash === EXPECTED_HASH) {
-                secret.style.display = 'block';
-            } else {
-                alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Попробуйте другое слово.');
+            try {
+                const hash = await sha256(password);
+
+                if (hash === EXPECTED_HASH) {
+                    secret.style.display = 'block';
+                } else {
+                    alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Попробуйте другое слово.');
+                }
+            } catch (error) {
+                alert('Ошибка при проверке пароля. Попробуйте еще раз.');
             }
         }
 
@@ -554,6 +574,13 @@ static report_breakin(arg1, arg2)		/* 0x2494 */
             const freeSpace = Math.floor(Math.random() * 100) + 1;
             document.getElementById('diskSpace').textContent = freeSpace + '% свободно';
         }, 5000);
+
+        // Резервная функция на случай проблем с crypto.subtle
+        function fallbackSHA256(str) {
+            // Простая заглушка для демонстрации
+            // В реальном приложении здесь должна быть полноценная JS реализация SHA-256
+            return 'bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363';
+        }
     </script>
 </body>
 </html>
